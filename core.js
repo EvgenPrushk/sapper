@@ -5,6 +5,8 @@ function getMatrix(columns, rows) {
         const row = [];
         for (let x = 0; x < columns; x++) {
             row.push({
+                left: false,
+                right: false,
                 id: idCounter++,
                 flag: false,
                 show: true,
@@ -76,6 +78,23 @@ function getAroundCells(matrix, x, y) {
     return cells;
 }
 
+// функция для нахождения id 
+function getCellById(matrix, id) {
+    // перебор всех элементов матрицы
+    for (let y = 0; y < matrix.length; y++) {
+        for (let x = 0; x < matrix[y].length; x++) {
+            const cell = matrix[y][x];
+            
+            if (cell.id === id ) {
+                return cell;
+            }
+        }
+        
+    }
+
+    return false;
+}
+
 function matrixToHtml(matrix) {
     const gameElement = document.createElement('div');
     gameElement.classList.add('sapper');
@@ -87,6 +106,12 @@ function matrixToHtml(matrix) {
         for (let x = 0; x < matrix[y].length; x++) {
             const cell = matrix[y][x];
             const imgElement = document.createElement('img');
+
+            // остановка перетаскивания картинки
+            imgElement.draggable = false;
+            // остановка контекст меню
+            imgElement.oncontextmenu = () => false;
+            imgElement.setAttribute('data-cell-id', cell.id);
             rowElement.append(imgElement);
             if (cell.flag) {
                 imgElement.src = 'assets/flag.png';
