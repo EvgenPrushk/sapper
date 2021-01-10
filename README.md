@@ -1,4 +1,4 @@
-###  Пишем  TODO app ###
+###  Пишем   game Sapper ###
 [Ссылка на урок в youtube №1](https://www.youtube.com/watch?v=9O6GcTqPHdg&t=221s)
 ===============================================================================
 [Ссылка на урок в youtube №2](https://www.youtube.com/watch?v=sQJ2edjnWn8&t=19s)
