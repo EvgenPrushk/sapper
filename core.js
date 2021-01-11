@@ -9,7 +9,8 @@ function getMatrix(columns, rows) {
                 right: false,
                 id: idCounter++,
                 flag: false,
-                show: true,
+                poten: false,
+                show: false,
                 mine: false,
                 number: 0,
                 x,
@@ -115,6 +116,11 @@ function matrixToHtml(matrix) {
             rowElement.append(imgElement);
             if (cell.flag) {
                 imgElement.src = 'assets/flag.png';
+                continue;
+            }
+
+            if (cell.poten) {
+                imgElement.src = 'assets/poten.png';
                 continue;
             }
 

@@ -9,8 +9,6 @@ update();
 function update () {
     const gameElement = matrixToHtml(matrix);
 
-    console.log(gameElement);
-
     const appElement = document.querySelector("#app");
     appElement.innerHTML = "";
     // добавляем дачерней элемент в appEllment
@@ -39,19 +37,27 @@ function mousedownHandler (event) {
         cell.right = true;
     }
 
-
     if (cell.left && cell.right) {
         bothHandler(cell);
     } 
+
+    update();
 }
 
 function mouseupHandler (event) {
     const { left, right, cell } = getInfo(event);
+    // если на клеточке есть левый и правый флаги  и отпустили левую и правую клавишу мыши
+    const both = cell.right && cell.left && (left || right);
+    // проверяем есть ли левый флаг на клеточке и отжата ли левая клавиша мыши + !boht
+    const leftMouse = !both && cell.left && left;
+    // проверяем есть ли  правый флаг на клеточке и отжата ли правая клавиша мыши + !boht
+    const rightMouse = !both && cell.right && right;
 
-    if () {
-        
+    if (both) {
+        // первым аргументом передаем матрицу, а вторым функциию x.poten = false
+        forEach(matrix, x => x.poten = false);
     }
-
+       
     if (left) {
         cell.left = false;
     }
@@ -59,7 +65,16 @@ function mouseupHandler (event) {
     if (right) {
         cell.right = false;
     }
-    console.log(info);
+    
+    if (leftMouse) {
+        leftHandler(cell);
+    } 
+    
+    else  if (rightMouse) {
+        rightHandler(cell);  
+    }
+
+    update();
 }
 
 function mouseleaveHandler(event) {
@@ -67,6 +82,8 @@ function mouseleaveHandler(event) {
 
     info.cell.left = false;
     info.cell.right = false;
+
+    update();
 }
 
 function getInfo (event) {
@@ -81,14 +98,80 @@ function getInfo (event) {
     };
 }
 
-function leftHandler(event) {
-    console.log('leftHandler');
+function leftHandler(cell) {
+    if (cell.show || cell.flag) {
+       return; 
+    }
+
+    cell.show = true;
+
+    showSpread(matrix, cell.x, cell.y);
+    
 }
 
-function rightHandler(event) {
-    console.log('rightHandler');
+function rightHandler(cell) {
+    if (!cell.show) {
+        cell.flag = !cell.flag;
+    }
 }
 
-function bothHandler(event) {
-    console.log('bothHandler');
+function bothHandler(cell) {
+    if (!cell.show || !cell.number) {
+        return
+    }
+
+    const cells = getAroundCells(matrix, cell.x, cell.y);
+    // сколько вокруг этой клеточки поднято флагов
+    const flags = cells.filter(x => x.flag).length;
+
+    if (flags === cell.number) {
+        cells
+        .filter(x => !x.flag && !x.show)
+        .forEach(x => x.show = true);
+    }
+
+    else {
+        cells
+        .filter(x => !x.flag && !x.show)
+        .forEach(cell =>cell.poten = true);
+    }
+}
+
+function forEach (matrix, handler) {
+    for (let y = 0; y < matrix.length; y++) {
+        for (let x = 0; x < matrix[y].length; x++) {
+            //  функция принимает все значения матрицы
+            handler(matrix[y][x]);
+        }        
+    }
+}
+
+function showSpread (matrix, x, y) {
+    const cell = getCell(matrix, x, y);
+
+    if (cell.number || cell.mine || cell.flag) {
+        return;
+    }
+
+    forEach(matrix, x => x._marked = false);
+
+    cell._marked = true;
+
+    let flag = true;
+
+    while (flag) {
+        flag = false;
+        for (let y = 0; y < matrix.length; y++) {
+            for (let x = 0; x < matrix.length; x++) {
+                const cell = matrix[y][x];
+                
+                if (!cell._marked) {
+                    continue;
+                }
+
+                const cells = getAroundCells(matrix, x, y);
+            }            
+        }
+    }
+    forEach(matrix, x => delete x._marked);
 }
