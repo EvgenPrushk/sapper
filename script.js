@@ -1,12 +1,26 @@
-const matrix = getMatrix(10, 10);
+let matrix = null;
+let running = null;
 
-for (let i = 0; i < 10; i++) {
-    setRandomMine(matrix);
+init(10, 10, 10);
+
+document.querySelector('button').addEventListener('click', () => init(10, 10, 10));
+
+function init(columns, rows, mines) {
+    matrix = getMatrix(columns, rows);
+    running = true;
+
+    for (let i = 0; i < mines; i++) {
+        setRandomMine(matrix);
+    }
+
+    update();
 }
 
-update();
-
 function update() {
+    if (!running) {
+        return;
+    }
+
     const gameElement = matrixToHtml(matrix);
 
     const appElement = document.querySelector("#app");
@@ -21,6 +35,13 @@ function update() {
             imgElement.addEventListener('mouseup', mouseupHandler);
             imgElement.addEventListener('mouseleave', mouseleaveHandler);
         });
+    if (isLosing(matrix)) {
+        alert("Увы! Вы проиграли!");
+        running = false;
+    } else if (isWin(matrix)) {
+        alert("Ура! Вы выиграли!");
+        running = false;
+    }
 
 }
 
@@ -180,7 +201,7 @@ function showSpread(matrix, x, y) {
                 const cells = getAroundCells(matrix, x, y);
 
                 for (const cell of cells) {
-                    if (cell._marked ) {
+                    if (cell._marked) {
                         continue;
                     }
 
@@ -192,10 +213,10 @@ function showSpread(matrix, x, y) {
             }
         }
     }
-    
+
     forEach(matrix, x => {
         if (x._marked) {
-        x.show = true;
+            x.show = true;
         }
         delete x._marked;
     });
@@ -204,17 +225,38 @@ function showSpread(matrix, x, y) {
 function isWin(matrix) {
     const flags = [];
     const mines = [];
-// пробегаемся по всем
+    // пробегаемся по всем элементам матрицы, если на ней есть флаг или мина добавляем в массив
     forEach(matrix, cell => {
         if (cell.flag) {
             flags.push(cell);
         }
 
-        if (cell.push) {
+        if (cell.mine) {
             mines.push(cell);
         }
-    })
-};
+    });
+    if (flags.length !== mines.length) {
+        return false;
+    }
+
+    for (const cell of mines) {
+        if (!cell.flag) {
+            return false;
+        }
+    }
+
+    for (let y = 0; y < matrix.length; y++) {
+        for (let x = 0; x < matrix[y].length; x++) {
+            const cell = matrix[y][x];
+
+            if (!cell.mine && !cell.show) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
 
 function isLosing(matrix) {
     for (let y = 0; y < matrix.length; y++) {
@@ -223,9 +265,9 @@ function isLosing(matrix) {
 
             if (cell.mine && cell.show) {
                 return true;
-            }            
-        }        
+            }
+        }
     }
 
     return false;
-};
+}
