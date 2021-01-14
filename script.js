@@ -192,7 +192,6 @@ function showSpread(matrix, x, y) {
             }
         }
     }
-
     
     forEach(matrix, x => {
         if (x._marked) {
@@ -201,3 +200,32 @@ function showSpread(matrix, x, y) {
         delete x._marked;
     });
 }
+
+function isWin(matrix) {
+    const flags = [];
+    const mines = [];
+// пробегаемся по всем
+    forEach(matrix, cell => {
+        if (cell.flag) {
+            flags.push(cell);
+        }
+
+        if (cell.push) {
+            mines.push(cell);
+        }
+    })
+};
+
+function isLosing(matrix) {
+    for (let y = 0; y < matrix.length; y++) {
+        for (let x = 0; x < matrix[y].length; x++) {
+            const cell = matrix[y][x];
+
+            if (cell.mine && cell.show) {
+                return true;
+            }            
+        }        
+    }
+
+    return false;
+};
