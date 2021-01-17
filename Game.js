@@ -1,51 +1,86 @@
 class Game {
-    constructor (args) {
+    constructor(args) {
         this.el = args.el;
+        this.running = true;
+        this.matrix = new Matrix(args.columns, args.rows, args.mines);
+        this.update();
+
+    }
+
+    update() {
+        if (!this.running) {
+            return;
+        }
+        const gameElement = this.matrix.matrixToHtml();
+
+        this.el.innerHTML = "";
+        // добавляем дачерней элемент в el
+        this.el.append(gameElement);
+
+        this.el
+            .querySelectorAll('img')
+            .forEach(imgElement => { // привязываем через bind()
+                imgElement.addEventListener('mousedown', mousedownHandler.bind(this));
+                imgElement.addEventListener('mouseup', mouseupHandler.bind(this));
+                imgElement.addEventListener('mouseleave', mouseleaveHandler.bind(this));
+            });
+        if (this.matrix.isLosing) {
+            alert("Увы! Вы проиграли!");
+            this.running = false;
+        } else if (this.matrix.isWin) {
+            alert("Ура! Вы выиграли!");
+            this.running = false;
+        }
+    }
+
+    leftHandler(cell) {
+        if (cell.show || cell.flag) {
+            return;
+        }
+
+        cell.show = true;
+
+        this.matrix.showSpread(cell.x, cell.y);
+
+    }
+
+    rightHandler(cell) {
+        if (!cell.show) {
+            cell.flag = !cell.flag;
+        }
+    }
+
+    bothHandler(cell) {
+        if (!cell.show || !cell.number) {
+            return
+        }
+
+        const cells = this.matrix.getAroundCells(cell.x, cell.y);
+        // сколько вокруг этой клеточки поднято флагов
+        const flags = cells.filter(x => x.flag).length;
+
+        if (flags === cell.number) {
+            cells
+                .filter(x => !x.flag && !x.show)
+                .forEach(cell => {
+                    cell.show = true;
+                    this.matrix.showSpread(cell.x, cell.y);
+                });
+        } else {
+            cells
+                .filter(x => !x.flag && !x.show)
+                .forEach(cell => cell.poten = true);
+        }
     }
 }
 
-let matrix = null;
-let running = null;
-
-init(10, 10, 10);
-
-document.querySelector('button').addEventListener('click', () => init(10, 10, 10));
 
 function init(columns, rows, mines) {
-    
+
     running = true;
     matrix = new Matrix(columns, rows, mines)
 
     update();
-}
-
-function update() {
-    if (!running) {
-        return;
-    }
-
-    const gameElement = matrix.matrixToHtml();
-
-    const appElement = document.querySelector("#app");
-    appElement.innerHTML = "";
-    // добавляем дачерней элемент в appEllment
-    appElement.append(gameElement);
-
-    appElement
-        .querySelectorAll('img')
-        .forEach(imgElement => {
-            imgElement.addEventListener('mousedown', mousedownHandler);
-            imgElement.addEventListener('mouseup', mouseupHandler);
-            imgElement.addEventListener('mouseleave', mouseleaveHandler);
-        });
-    if (matrix.isLosing) {
-        alert("Увы! Вы проиграли!");
-        running = false;
-    } else if (matrix.isWin) {
-        alert("Ура! Вы выиграли!");
-        running = false;
-    }
-
 }
 
 function mousedownHandler(event) {
@@ -55,7 +90,7 @@ function mousedownHandler(event) {
         cell,
         left,
         right
-    } = getInfo(event);
+    } = getInfo.call(this, event);
 
     if (left) {
         cell.left = true;
@@ -66,10 +101,10 @@ function mousedownHandler(event) {
     }
 
     if (cell.left && cell.right) {
-        bothHandler(cell);
+        this.bothHandler(cell);
     }
 
-    update();
+    this.update();
 }
 
 function mouseupHandler(event) {
@@ -77,7 +112,7 @@ function mouseupHandler(event) {
         left,
         right,
         cell
-    } = getInfo(event);
+    } = getInfo.call(this, event);
     // если на клеточке есть левый и правый флаги  и отпустили левую и правую клавишу мыши
     const both = cell.right && cell.left && (left || right);
     // проверяем есть ли левый флаг на клеточке и отжата ли левая клавиша мыши + !boht
@@ -87,7 +122,7 @@ function mouseupHandler(event) {
 
     if (both) {
         // первым аргументом передаем матрицу, а вторым функциию x.poten = false
-        matrix.forEach(x => x.poten = false);
+        this.matrix.forEach(x => x.poten = false);
     }
 
     if (left) {
@@ -99,21 +134,21 @@ function mouseupHandler(event) {
     }
 
     if (leftMouse) {
-        leftHandler(cell);
+        this.leftHandler(cell);
     } else if (rightMouse) {
-        rightHandler(cell);
+        this.rightHandler(cell);
     }
 
-    update();
+    this.update();
 }
 
 function mouseleaveHandler(event) {
-    const info = getInfo(event);
+    const info = getInfo.call(this, event);
 
     info.cell.left = false;
     info.cell.right = false;
 
-    update();
+    this.update();
 }
 
 function getInfo(event) {
@@ -124,46 +159,6 @@ function getInfo(event) {
     return {
         left: event.which === 1,
         right: event.which === 3,
-        cell: matrix.getCellById(cellId),
+        cell: this.matrix.getCellById(cellId),
     };
-}
-
-function leftHandler(cell) {
-    if (cell.show || cell.flag) {
-        return;
-    }
-
-    cell.show = true;
-
-    matrix.showSpread(cell.x, cell.y);
-
-}
-
-function rightHandler(cell) {
-    if (!cell.show) {
-        cell.flag = !cell.flag;
-    }
-}
-
-function bothHandler(cell) {
-    if (!cell.show || !cell.number) {
-        return
-    }
-
-    const cells = matrix.getAroundCells(cell.x, cell.y);
-    // сколько вокруг этой клеточки поднято флагов
-    const flags = cells.filter(x => x.flag).length;
-
-    if (flags === cell.number) {
-        cells
-            .filter(x => !x.flag && !x.show)
-            .forEach(cell => {
-                cell.show = true;
-                matrix.showSpread(cell.x, cell.y);
-            });
-    } else {
-        cells
-            .filter(x => !x.flag && !x.show)
-            .forEach(cell => cell.poten = true);
-    }
 }
